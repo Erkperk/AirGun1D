@@ -18,17 +18,18 @@ classdef DiscrAirgun < noname.Discretization
     end
 
     methods
-        function obj = DiscrAirgun(m,order,airgunPressure,airgunLength,airgunPortArea,airgunDepth)
+        function obj = DiscrAirgun(m,order,airgunPressure,airgunLength,airgunPortArea,airgunDepth,gasProps)
             default_arg('m',100)
             default_arg('order',4)
+            if nargin < 7, gasProps = []; end
 
             obj.name = 'Euler Wall conditions';
             obj.description = '1D Euler equation with wall boundary conditions on both sides.';
 
             %[physConst, t0, icAirgun, icBubble] = configAirgun('shocktube');
             %[physConst, t0, icAirgun, icBubble] = configAirgun('nonphys');
-            [physConst, t0, icAirgun, icBubble] = configAirgun('Bolt1500LL',airgunPressure,airgunLength,airgunPortArea,airgunDepth);
-            
+            [physConst, t0, icAirgun, icBubble] = configAirgun('Bolt1500LL',airgunPressure,airgunLength,airgunPortArea,airgunDepth,gasProps);
+
             A  = physConst.A;
             xlim = {-physConst.L, 0};
 
@@ -37,7 +38,7 @@ classdef DiscrAirgun < noname.Discretization
 
             m = (xlim{2}-xlim{1})*m+1;
 
-            schm = scheme.Euler1d(m,xlim,order,[],[],true);
+            schm = scheme.Euler1d(m,xlim,order,physConst.gamma,[],true);
   
             closure_l = schm.boundary_condition('l', 'wall');
             closure_r_out_sub = schm.boundary_condition('r', 'outflow');  %% should set pressure

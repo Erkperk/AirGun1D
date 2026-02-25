@@ -1,6 +1,7 @@
-function sol = runEulerCode(nx,airgunPressure,airgunLength,airgunPortArea,airgunDepth)
-%sol = runEulerCode(nx)
-    d = DiscrAirgun(nx,3,airgunPressure,airgunLength,airgunPortArea,airgunDepth);
+function sol = runEulerCode(nx,airgunPressure,airgunLength,airgunPortArea,airgunDepth,gasProps)
+%sol = runEulerCode(nx,pressure,length,area,depth[,gasProps])
+    if nargin < 6, gasProps = []; end
+    d = DiscrAirgun(nx,3,airgunPressure,airgunLength,airgunPortArea,airgunDepth,gasProps);
     
     q0 = d.q0;
     t0 = d.t0;
