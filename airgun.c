@@ -47,6 +47,12 @@ static double g_Rgas   = R_UNIV / M_CH4;   /* 518.28 J/(kg*K) */
 static double g_gamma  = 1.31;             /* ratio of heat capacities for CH4 */
 static double g_Cv     = 0.0;              /* computed: Rgas / (gamma - 1) */
 
+/* CoolProp U offset: U_table(T,P_low) ≈ Cv*T + U_offset at low pressure.
+   Computed at startup so ideal-gas fallback is continuous with tables. */
+static double g_U_offset = 0.0;
+#define T_TABLE_LO (T_MIN + 5.0 * T_STEP)   /* safe margin inside table */
+#define T_TABLE_HI (T_MIN + (NT - 6) * T_STEP)
+
 /* ========== Runtime parameters ========== */
 static int    g_nx       = 100;
 static double g_pressure = 2000.0 * 6894.76;  /* 2000 psi in Pa */
@@ -213,8 +219,11 @@ static inline double thermo_soundspeed(double T, double P, double rho_val, doubl
 
 /* ========== Temperature recovery: Newton iteration on U(T,P) tables ========== */
 
-static inline double recover_temperature(double e_int, double T_guess, double P_guess)
+/* Returns: recovered T, and sets *out_of_table = 1 if ideal-gas fallback was used */
+static inline double recover_temperature(double e_int, double T_guess, double P_guess,
+                                          int *out_of_table)
 {
+    *out_of_table = 0;
     if (g_ideal_gas) return e_int / g_Cv;
 
     double T = T_guess;
@@ -225,6 +234,13 @@ static inline double recover_temperature(double e_int, double T_guess, double P_
         T += (e_int - lookup_U(T, P)) / cv;
         if (T < T_MIN) T = T_MIN;
         if (T > T_MIN + (NT - 1) * T_STEP) T = T_MIN + (NT - 1) * T_STEP;
+    }
+
+    /* If T lands outside safe table interior, fall back to ideal gas */
+    if (T < T_TABLE_LO || T > T_TABLE_HI || T != T) {
+        T = (e_int - g_U_offset) / g_Cv;
+        if (T < 50.0) T = 50.0;
+        *out_of_table = 1;
     }
 
     return T;
@@ -442,10 +458,19 @@ static void compute_euler_rhs(const double *q, double *dq, int m)
         /* Recover temperature */
         double T_guess = g_T[i] > 0.0 ? g_T[i] : g_T_inf;
         double P_guess = g_p[i] > 0.0 ? g_p[i] : g_pressure;
-        double T = recover_temperature(e_int, T_guess, P_guess);
-        double P = compute_pressure(rho, T);
-        double cv = lookup_Cv(T, fmax(P, P_MIN));
-        double c = thermo_soundspeed(T, P, rho, cv);
+        int oot = 0;
+        double T = recover_temperature(e_int, T_guess, P_guess, &oot);
+        double P, cv, c;
+        if (oot) {
+            /* Out-of-table fallback: ideal-gas EOS */
+            P = rho * g_Rgas * T;
+            cv = g_Cv;
+            c = sqrt(g_gamma * P / rho);
+        } else {
+            P = compute_pressure(rho, T);
+            cv = lookup_Cv(T, fmax(P, P_MIN));
+            c = thermo_soundspeed(T, P, rho, cv);
+        }
 
         g_T[i] = T;
         g_p[i] = P;
@@ -946,6 +971,11 @@ int main(int argc, char **argv)
             fprintf(stderr, "Error: tables.h not available. Use --ideal or generate tables.\n");
             return 1;
         }
+        /* Compute U offset so ideal-gas fallback is continuous with tables.
+         * At low pressure, U(T,P_low) ≈ Cv*T + U_offset. */
+        double T_ref_lo = 300.0;
+        g_U_offset = lookup_U(T_ref_lo, P_MIN) - g_Cv * T_ref_lo;
+        fprintf(stderr, "  U_offset: %.1f J/kg (ideal-gas fallback)\n", g_U_offset);
     }
 
     /* Initialize SBP operators */
