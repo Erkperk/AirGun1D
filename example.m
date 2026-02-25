@@ -81,9 +81,9 @@ pa2bar = 1e-5; % conversion from Pa to bar
 h = surf(X,T*1000,p*pa2bar);
 view(2); shading interp
 ylabel('Time (ms)'); xlabel('Position (m)'); %title('Pressure');
-cb = colorbar; cb.Label.String = 'bar';
+cb = colorbar; ylabel(cb, 'bar');
 ylim([0 20]); xlim([0 src_length]);
-set(h.Parent,'XTick',[0 0.2 0.4 0.6 0.8 1 1.2]);
+set(get(h,'Parent'),'XTick',[0 0.2 0.4 0.6 0.8 1 1.2]);
 hold on;
 title('(c) Source Pressure');
 
