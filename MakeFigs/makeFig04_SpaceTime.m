@@ -24,9 +24,9 @@ cmap = get(gca,'ColorOrder');
 
 nx = 100; % number of grid points per 1 m of air gun length
 
-aP = 2000; % air gun pressure [psi]
+aP = 2000 * 6894.76; % air gun pressure [Pa] (2000 psi)
 aL = 1.2; % air gun length [m]
-aA = 12.5; % air gun port area [in^2] % cross-sectional area = port area
+aA = 12.5 * 6.4516e-4; % air gun port area [m^2] (12.5 in^2) % cross-sectional area = port area
 aD = 7.5; % air gun depth [m]
 
 sol = runEulerCode(nx, aP, aL, aA, aD); 

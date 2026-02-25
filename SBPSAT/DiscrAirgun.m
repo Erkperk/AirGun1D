@@ -1,8 +1,6 @@
 classdef DiscrAirgun < noname.Discretization
     properties
-        name        = 'Euler Wall conditions' %Short description
-        description = '1D Euler equation with wall boundary conditions on both sides.' %Longer description
-        order        %Order of accuracy
+        % name, description, order inherited from Discretization
         schm
 
         physConst
@@ -24,6 +22,9 @@ classdef DiscrAirgun < noname.Discretization
             default_arg('m',100)
             default_arg('order',4)
 
+            obj.name = 'Euler Wall conditions';
+            obj.description = '1D Euler equation with wall boundary conditions on both sides.';
+
             %[physConst, t0, icAirgun, icBubble] = configAirgun('shocktube');
             %[physConst, t0, icAirgun, icBubble] = configAirgun('nonphys');
             [physConst, t0, icAirgun, icBubble] = configAirgun('Bolt1500LL',airgunPressure,airgunLength,airgunPortArea,airgunDepth);
@@ -40,74 +41,20 @@ classdef DiscrAirgun < noname.Discretization
   
             closure_l = schm.boundary_condition('l', 'wall');
             closure_r_out_sub = schm.boundary_condition('r', 'outflow');  %% should set pressure
-            L = @(~,u,~)(physConst.gamma -1)*[0 -1/2*u 1];
 
-            function [dq, dBubble] = RHS(q,t,bubble)
-                flowState = schm.flowStateR(q);
-
-                if t >= physConst.AirgunCutoffTime || flowState == scheme.Euler1d.SUBSONIC_INFLOW
-                    dq = q.*0;
-                    dBubble = bubbleRHS(bubble, 0, 0, 0, 0, 0, physConst);
-                    return
-                end
-
-                p_b = bubblePressure(bubble, physConst);
-                dq = schm.D(q) + closure_l(q);
-
-
-                %% Apply conditions on airgun and calculate q_hat
-                if flowState == scheme.Euler1d.SUBSONIC_OUTFLOW
-
-                    dq = dq + closure_r_out_sub(q,p_b);
-
-                    % Set
-                    pIn = [3];
-                    pOut = [1 2];
-                    permutation = [pIn pOut];
-                    invPermutation(permutation) = 1:3;
-
-                    % q_r = schm.e_R'*q;
-                    % w = inv(schm.T(q_r))*q_r;
-
-                    % Ltemp = L(q_r(1), q_r(2)/q_r(1), q_r(3));
-                    % g = p_b;
-                    % T = schm.T(q_r);
-
-                    % wHat = zeros(3,1);
-                    % wHat(pIn) = inv(Ltemp*T(:,pIn))*(g - Ltemp*T(:,pOut)*w(pOut)); % g := p_b
-                    % wHat(pOut) = w(pOut);
-
-                    % qHat = T*wHat;
-                elseif flowState == scheme.Euler1d.SUPERSONIC_OUTFLOW
-                    % No bc required
-                    qHat = schm.e_R'*q;
-                else
-                    % Will not run due to earlier if
-                    q_r = schm.e_R'*q;
-                    printExpr('q_r(1)');
-                    printExpr('q_r(2)');
-                    printExpr('q_r(3)');
-
-                    % q
-                    c = schm.c(q_r)
-                    v = q_r(2)/q_r(1)
-                    error('Undefined behaviour. flowState = %d, t = %f', flowState, t)
-                end
-
-                qHat = schm.e_R'*q;
-                rho_a = qHat(1);
-                v_a = qHat(2)/qHat(1);
-                e_a = qHat(3);
-                p_a = schm.p(qHat);
-                %dBubble = bubbleRHS(bubble, rho_a, v_a, e_a, p_a, A, physConst);
-                
-                % turbulent energy dissipation
-                C = 0; %coefficient of turbulent energy dissipation
-                gun_area = 12.5;
-                port_area = 12;
-                deltaP = C*rho_a*v_a^2*(gun_area/port_area)^2;
-                dBubble = bubbleRHS(bubble, rho_a, v_a, e_a, p_a - deltaP, A, physConst);
-            end
+            % Pack dependencies into struct for standalone RHS function
+            % (Octave does not support nested functions in classdef)
+            deps.flowStateR = @(q) schm.flowStateR(q);
+            deps.D = schm.D;
+            deps.e_R = schm.e_R;
+            deps.p_fun = @(q) schm.p(q);
+            deps.closure_l = closure_l;
+            deps.closure_r_out_sub = closure_r_out_sub;
+            deps.physConst = physConst;
+            deps.A = A;
+            deps.SUBSONIC_INFLOW = scheme.Euler1d.SUBSONIC_INFLOW;
+            deps.SUBSONIC_OUTFLOW = scheme.Euler1d.SUBSONIC_OUTFLOW;
+            deps.SUPERSONIC_OUTFLOW = scheme.Euler1d.SUPERSONIC_OUTFLOW;
 
             H = schm.H;
 
@@ -128,7 +75,7 @@ classdef DiscrAirgun < noname.Discretization
             ];
 
             obj.order = order;
-            obj.RHS = @RHS;
+            obj.RHS = @(q,t,bubble) airgunRHS(q,t,bubble,deps);
             obj.H = H;
             obj.schm = schm;
             obj.h = schm.h;

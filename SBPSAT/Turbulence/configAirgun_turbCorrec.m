@@ -10,20 +10,14 @@ switch str
         
         t0 = 0;
         
-        p0a_imperial = airgunPressure; % air gun pressure [psi]
-        p0a = p0a_imperial * 6894.8; % air gun pressure [Pa]
+        p0a = airgunPressure; % air gun pressure [Pa]
         physConst.p0a = p0a;
-        
+
         physConst.L = airgunLength; % Length of Airgun in meters
 
-        %cross_sectional_area = 24; % [in^2] cross sectional area is calculated by assuming 1m long (39.3701) for 600in3 airgun.
-        cross_sectional_area = airgunPortArea;
-        airgunLengthImperial = physConst.L/0.0254; % length in inches
-        V_imperial = airgunLengthImperial * cross_sectional_area;
-        V = V_imperial * 1.63871e-5; % air gun volume [m^3]
-        
-        A_imperial = airgunPortArea; % air gun port area [in^2]
-        A = A_imperial * 6.4516e-4; % air gun port area [m^2]
+        V = physConst.L * airgunPortArea; % air gun volume [m^3]
+
+        A = airgunPortArea; % air gun port area [m^2]
         physConst.A = A;
         
         
@@ -63,8 +57,8 @@ switch str
         Q = physConst.Q;
         c_v = physConst.c_v;
         
-        %V_airgun_const = 250 * 1.63871e-5;
-        V_airgun_const = 600 * 1.63871e-5;
+        %V_airgun_const = 250 * 1.63871e-5; % 250 in^3 in m^3
+        V_airgun_const = 600 * 1.63871e-5; % 600 in^3 in m^3
         icBubble.R = (3/(4*pi) * V_airgun_const)^(1/3);
         %icBubble.R = (3/(4*pi) * V)^(1/3);
         icBubble.Rdot = 0;

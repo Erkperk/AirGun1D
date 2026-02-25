@@ -19,9 +19,9 @@ function sol = runEulerCode(nx,airgunPressure,airgunLength,airgunPortArea,airgun
 
     y0 = [bubble0; q0];
     tspan = [0; 2];
-    options = odeset('RelTol',1e-6);
-    
-    sol = ode45(@odefun, tspan, y0,options);
+    options = odeset('RelTol',1e-6,'InitialStep',1e-7);
+
+    sol = ode45(@odefun, tspan, y0, options);
 
     %k = 0.000003/2
     %sol.y = LeightonsRK4(@odefun,tspan(2),k,y0);

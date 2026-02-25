@@ -39,15 +39,17 @@ gamma = 1.4; % ratio of heat capacities
 Q = 287.06; % specific gas constant for dry air [J/kgK]
 T_inf = 288; % temperature assumed constant throughout the system [K]
 
-aP_plot = [220 420 610 810 1030]; % air gun pressures to plot [psi]
-aP_plot = fliplr(aP_plot);
+aP_plot_psi = [220 420 610 810 1030]; % air gun pressures [psi] (for analytical model)
+aP_plot_psi = fliplr(aP_plot_psi);
+aP_plot = aP_plot_psi * psi_pa; % [Pa]
 aP = aP_plot;
 
 % air gun properties
 aL = 1.2; % length [m]
-aA = 12.5; % cross-sectional area [in^2]
+aA_in2 = 12.5; % cross-sectional area [in^2] (for analytical model)
+aA = aA_in2 * in2_m2; % cross-sectional area [m^2]
 aD = 7.5; % air gun depth [m]
-aV = aL*39.3701*aA; % volume [m^3]
+aV_in3 = aL*39.3701*aA_in2; % volume [in^3] (for analytical model)
 
 physConst = physical_constants(aD,r);
 k = [5 4 3 2 1];
@@ -79,7 +81,7 @@ for i = 1:length(aP)
         ylabel('kg');
                 
         % plot analytical mass flow rate
-        dmdt = (aP(i)*psi_pa)*(aA*in2_m2) * (gamma/(Q*T_inf))^(1/2) * ...
+        dmdt = aP(i)*aA * (gamma/(Q*T_inf))^(1/2) * ...
             (2/(gamma+1))^((gamma+1)/(gamma-1));
         m_analytical = m(1) + t*dmdt;
         h = plot(t*1000,m_analytical,'Color',cmap(j,:),'LineStyle','--');
@@ -95,7 +97,7 @@ for i = 1:length(aP)
         xlabel('Time (ms)');
         
         % analytical acoustic pressure perturbation
-        input = [aP(i), aV, aA];
+        input = [aP(i)/psi_pa, aV_in3, aA_in2]; % [psi, in^3, in^2] for analytical model
         airgunInit = airgun_initialization(input, physConst);
         bubbleInit = bubble_initialization(airgunInit, physConst);
         initCond = initCond_save(bubbleInit, airgunInit);
@@ -132,15 +134,16 @@ end
 
 figure(1);
 subplot(3,1,3);
-plot(aP, riseTime,'k-');
+aP_bar = aP * 1e-5; % convert Pa to bar for plotting
+plot(aP_bar, riseTime,'k-');
 hold on;
-plot(aP, slope,'k--');
-plot(aP, ppeak,'k:');
-xlim([min(aP), max(aP)]);
-xlabel('Air gun pressure (psi)');
+plot(aP_bar, slope,'k--');
+plot(aP_bar, ppeak,'k:');
+xlim([min(aP_bar), max(aP_bar)]);
+xlabel('Air gun pressure (bar)');
 legend('Rise Time (ms)','Slope (bar m/ms)','Peak Pressure (bar m)');
 ylim([0 7])
-h = text(150,5.2,'(c)');
+h = text(min(aP_bar),5.2,'(c)');
 set(h,'FontSize',24);
 set(h,'FontWeight','bold');
 

@@ -16,11 +16,11 @@ addpath sbplib/ % add path to sbplib
 % define discretization
 nx = 50; % number of grid points per 1m of source length
 
-% source  properties
-src_length = 1.2; % source length (m)
-src_area = 12.5; % cross-sectional area of source (in^2)
-src_depth = 7.5; % source depth (m)
-src_pressure = 1000; % source pressure (psi)
+% source properties (SI units)
+src_length = 1.2; % source length [m]
+src_area = 12.5 * 6.4516e-4; % cross-sectional area [m^2] (12.5 in^2)
+src_depth = 7.5; % source depth [m]
+src_pressure = 1000 * 6894.76; % source pressure [Pa] (1000 psi)
 
 % run code
 tic
@@ -77,11 +77,11 @@ p = (gamma-1)*(e-0.5*rho.*v.^2); % pressure
 
 % pressure in source
 figure(1); subplot(3,1,3);
-pa2psi = 0.000145038; % conversion from pa to psi
-h = surf(X,T*1000,p*pa2psi);
+pa2bar = 1e-5; % conversion from Pa to bar
+h = surf(X,T*1000,p*pa2bar);
 view(2); shading interp
 ylabel('Time (ms)'); xlabel('Position (m)'); %title('Pressure');
-cb = colorbar; cb.Label.String = 'psi';
+cb = colorbar; cb.Label.String = 'bar';
 ylim([0 20]); xlim([0 src_length]);
 set(h.Parent,'XTick',[0 0.2 0.4 0.6 0.8 1 1.2]);
 hold on;

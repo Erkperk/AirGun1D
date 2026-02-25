@@ -27,17 +27,17 @@ addpath ../SBPSAT/VariableInitialBubbleVolume/
 
 nx = 50; % number of points that air gun is discretized into per 1 m
 
-airgunPressure = 1020; % [psi]
+airgunPressure = 1020 * 6894.76; % [Pa] (1020 psi)
 airgunLength = 1.2; % [m]
-airgunPortArea = 12.5; % [in2]
+airgunPortArea = 12.5 * 6.4516e-4; % [m^2] (12.5 in^2)
 airgunDepth = 10; % [m]
-airgunVolume = airgunLength*39.3701 * airgunPortArea; % [in3]
+airgunVolume = airgunLength * airgunPortArea; % [m^3]
 
 r = 75;
 rho_infty = 1e3;
 c_infty = 1482; 
  
-initBubbleVol_plot = [600 1200 2500 4000];
+initBubbleVol_plot = [600 1200 2500 4000] * 1.63871e-5; % [m^3]
 initBubbleVol = initBubbleVol_plot;
 
 peakPressure = zeros(size(initBubbleVol));
@@ -81,7 +81,7 @@ tSave = [];
 pSave = [];
 
 for i = 1:length(initBubbleVol)
-    disp_str = strcat('Initial Bubble Volume=',num2str(initBubbleVol(i)),'in3');
+    disp_str = strcat('Initial Bubble Volume=',num2str(initBubbleVol(i)),' m3');
     disp(disp_str);
      
     sol = runEulerCode_initBubbleVol(nx, initBubbleVol(i),airgunPressure, airgunLength, airgunPortArea, airgunDepth);
@@ -135,7 +135,7 @@ hold on;
 plot(initBubbleVol, slope,'k--');
 plot(initBubbleVol, peakPressure,'k:');
 
-xlabel('Initial bubble volume (in^3)');
+xlabel('Initial bubble volume (m^3)');
 xlim([min(initBubbleVol) max(initBubbleVol)]);
 legend('Rise Time (ms)','Slope (bar m / ms)','Peak Pressure (bar m)');
 

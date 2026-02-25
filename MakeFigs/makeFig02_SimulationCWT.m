@@ -33,9 +33,9 @@ gamma = 1.4; % ratio of heat capacities
 Q = 287.06; % specific gas constant for dry air [J/kgK]
 T_inf = 288; % temperature assumed constant throughout the system [K]
 
-aP = 2000; % air gun pressure for slope/rise time plot
+aP = 2000 * 6894.76; % air gun pressure [Pa] (2000 psi)
 aL = 0.6; % air gun length [m]
-aA = 16; % air gun port area [in^2] % cross-sectional area = port area
+aA = 16 * 6.4516e-4; % air gun port area [m^2] (16 in^2) % cross-sectional area = port area
 aD = 7.5; % air gun depth [m]
 
 % run solve

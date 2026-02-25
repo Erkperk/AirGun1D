@@ -1,5 +1,6 @@
 classdef D2Standard < sbp.OpSet
     properties
+        % borrowing, m, h, x inherited from OpSet
         D1 % SBP operator approximating first derivative
         H % Norm matrix
         HI % H^-1
@@ -10,11 +11,6 @@ classdef D2Standard < sbp.OpSet
         M % Norm matrix, second derivative
         d1_l % Left boundary first derivative
         d1_r % Right boundary first derivative
-        m % Number of grid points.
-        h % Step size
-        x % grid
-        borrowing % Struct with borrowing limits for different norm matrices
-
     end
 
     methods

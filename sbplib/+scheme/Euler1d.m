@@ -1,20 +1,15 @@
 classdef Euler1d < scheme.Scheme
     properties
-        m % Number of points in each direction, possibly a vector
+        % m, order, D, H inherited from Scheme
         N % Number of points total
         h % Grid spacing
         u % Grid values
         x % Values of x and y for each
-        order % Order accuracy for the approximation
-
-        D % non-stabalized scheme operator
-        M % Derivative norm
         gamma
-
-        H % Discrete norm
         Hi
         e_l, e_r, e_L, e_R;
-
+        D1_mat   % stored for Octave compat (no nested function capture)
+        Ddisp_mat % stored for Octave compat
     end
 
     properties (Constant)
@@ -82,38 +77,36 @@ classdef Euler1d < scheme.Scheme
 
             %Solving on form q_t + F_x = 0
 
-            function o = Fx(q)
-                Q = reshape(q,3,m);
-                o = reshape(obj.F(Q),3*m,1);
-                o = D1*o;
-            end
-
-            function o = Fx_disp(q)
-                Q = reshape(q,3,m);
-                f = reshape(obj.F(Q),3*m,1);
-
-                c = obj.c(Q);
-                lambda_max = c+abs(Q(2,:)./Q(1,:));
-                % lambda_max = max(lambda_max);
-
-                lamb_Q(1,:) = lambda_max.*Q(1,:);
-                lamb_Q(2,:) = lambda_max.*Q(2,:);
-                lamb_Q(3,:) = lambda_max.*Q(3,:);
-
-                lamb_q = reshape(lamb_Q,3*m, 1);
-
-                o = -D1*f + Ddisp*lamb_q;
-            end
-
+            obj.D1_mat = D1;
             if do_upwind
-                obj.D = @Fx_disp;
+                obj.Ddisp_mat = Ddisp;
+                obj.D = @(q) obj.Fx_disp(q);
             else
-                obj.D = @(q)-Fx(q);
+                obj.D = @(q) -obj.Fx(q);
             end
 
             obj.u = x;
             obj.x = kr(x,ones(3,1));
             obj.gamma = gamma;
+        end
+
+        function o = Fx(obj, q)
+            Q = reshape(q, 3, obj.m);
+            o = reshape(obj.F(Q), 3*obj.m, 1);
+            o = obj.D1_mat * o;
+        end
+
+        function o = Fx_disp(obj, q)
+            Q = reshape(q, 3, obj.m);
+            f = reshape(obj.F(Q), 3*obj.m, 1);
+            c_val = obj.c(Q);
+            lambda_max = c_val + abs(Q(2,:)./Q(1,:));
+            lamb_Q = zeros(3, obj.m);
+            lamb_Q(1,:) = lambda_max .* Q(1,:);
+            lamb_Q(2,:) = lambda_max .* Q(2,:);
+            lamb_Q(3,:) = lambda_max .* Q(3,:);
+            lamb_q = reshape(lamb_Q, 3*obj.m, 1);
+            o = -obj.D1_mat * f + obj.Ddisp_mat * lamb_q;
         end
 
         % Flux function

@@ -1,33 +1,16 @@
 % Start with all matrix returns. When that works see how we should generalize to non-matrix stuff/nonlinear
 classdef Scheme < handle
-    properties (Abstract)
+    properties
         m % Number of points in each direction, possibly a vector
         order % Order accuracy for the approximation
-
-        % vectors u,v,w depending on dim that gives were gridpoints are in each dimension
-        % vectors x,y,z containing the x,y,z values corresponding to each grid point
-        % matrices X,Y,Z with point coordinates as multi dimensional vectors
-
         D % non-stabalized scheme operator
         H % Discrete norm
-
-        % Should also containg:
-        % the grid points used
-        % the grid spacing
     end
 
-    methods (Abstract)
-        % Closure functions return the opertors applied to the own doamin to close the boundary
-        % Penalty functions return the opertors to force the solution. In the case of an interface it returns the operator applied to the other doamin.
-        %       boundary            is a string specifying the boundary e.g. 'l','r' or 'e','w','n','s'.
-        %       type                is a string specifying the type of boundary condition if there are several.
-        %       data                is a function returning the data that should be applied at the boundary.
-        %       neighbour_scheme    is an instance of Scheme that should be interfaced to.
-        %       neighbour_boundary  is a string specifying which boundary to interface to.
-        m = boundary_condition(obj,boundary,type,data)
-        m = interface(obj,boundary,neighbour_scheme,neighbour_boundary)
-        N = size(obj) % Returns the number of degrees of freedom.
-
+    methods
+        function m = boundary_condition(obj,boundary,type,data); error('Not implemented'); end
+        function m = interface(obj,boundary,neighbour_scheme,neighbour_boundary); error('Not implemented'); end
+        function N = size(obj); error('Not implemented'); end
     end
 
     methods(Static)

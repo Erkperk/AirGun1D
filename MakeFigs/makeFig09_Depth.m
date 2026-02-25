@@ -44,9 +44,9 @@ aD_plot = [5 7.5 10 15 25]; % depths to plot
 aD = [5 6 7.5 9 10 12.5 15 17.5 20 22.5 25]; % depths to compute
 
 % air gun properties
-aP = 1020; % pressure [Pa]
+aP = 1020 * 6894.76; % pressure [Pa] (1020 psi)
 aL = 1.2; % length [m]
-aA = 12.5; % cross-sectional area [in^2]
+aA = 12.5 * 6.4516e-4; % cross-sectional area [m^2] (12.5 in^2)
 
 j = 1;
 for i = 1:length(aD)

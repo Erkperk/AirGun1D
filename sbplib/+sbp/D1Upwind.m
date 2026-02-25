@@ -1,14 +1,11 @@
 classdef D1Upwind < sbp.OpSet
     properties
+        % borrowing, m, h, x inherited from OpSet
         Dp, Dm % SBP operator approximating first derivative
         H % Norm matrix
         HI % H^-1
         e_l % Left boundary operator
         e_r % Right boundary operator
-        m % Number of grid points.
-        h % Step size
-        x % grid
-        borrowing % Struct with borrowing limits for different norm matrices
     end
 
     methods

@@ -1,11 +1,9 @@
 classdef Rungekutta4proper < time.Timestepper
     properties
+        % t, k, n inherited from Timestepper
         F
-        k
-        t
         v
         m
-        n
     end
 
 

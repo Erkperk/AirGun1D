@@ -68,9 +68,9 @@ gamma = 1.4; % ratio of heat capacities
 Q = 287.06; % specific gas constant for dry air [J/kgK]
 T_inf = 288; % temperature assumed constant throughout the system [K]
 
-aP = 1030; % air gun pressure
+aP = 1030 * 6894.76; % air gun pressure [Pa] (1030 psi)
 aL = 1.2; % air gun length [m]
-aA = 12.5; % air gun port area [in^2] % cross-sectional area = port area
+aA = 12.5 * 6.4516e-4; % air gun port area [m^2] (12.5 in^2) % cross-sectional area = port area
 aD = 25; % air gun depth [m]
 
 %%% parameters that are varied between simulations %%%
@@ -78,7 +78,7 @@ nparam = 2; % number of simulations with different parameters
 beta = [0.8 0.3]; % damping parameter
 dissp_boolean = logical([1 0]); % constant or time varying dissipation
 Mfac = [1 0.45]; % mass flow reduction factor
-Vinit = [600 3000]; % initial bubble volume
+Vinit = [600 3000] * 1.63871e-5; % initial bubble volume [m^3]
 
 tSave = [];
 pSave = [];

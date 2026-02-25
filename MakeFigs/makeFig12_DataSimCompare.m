@@ -64,9 +64,11 @@ gamma = 1.4; % ratio of heat capacities
 Q = 287.06; % specific gas constant for dry air [J/kgK]
 T_inf = 288; % temperature assumed constant throughout the system [K]
 
-aP = 1020;
+aP_psi = 1020; % [psi] (for analytical model)
+aA_in2 = 12.5; % [in^2] (for analytical model)
+aP = aP_psi * 6894.76; % air gun pressure [Pa]
 aL = 1.2; % air gun length [m]
-aA = 12.5; % air gun port area [in^2] % cross-sectional area = port area
+aA = aA_in2 * 6.4516e-4; % air gun port area [m^2]
 aD = 10; % air gun depth [m]
 
 sol = runEulerCode(nx, aP, aL, aA, aD);
@@ -97,8 +99,8 @@ title('Acoustic Pressure');
 %% Lumped Parameter Model %%
 
 m_in = 39.3701; % conversion from m to in
-aV = aL*m_in * aA; % air gun volume [in^3]
-input = [aP, aV, aA]; % inputs for lumped parameter model [pressure, volume, port area]
+aV_in3 = aL*m_in * aA_in2; % air gun volume [in^3] (for analytical model)
+input = [aP_psi, aV_in3, aA_in2]; % inputs for lumped parameter model [psi, in^3, in^2]
 physConst = physical_constants(aD,r); % save physical constants. Specific depth and distance from source to receiver
 output = AirgunBubbleSolveOutput(input, physConst, false); % solve lumped parameter model
 

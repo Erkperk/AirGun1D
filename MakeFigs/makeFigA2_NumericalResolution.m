@@ -30,11 +30,11 @@ r = 75; % distance from source to receiver [m]
 c_inf = 1482; % speed of sound in water [m/s]
 rho_inf = 1000; % density in water [kg/m^3]
 
-pa2psi = 0.000145038; % conversion from pa to psi
+pa2bar = 1e-5; % conversion from Pa to bar
 
-aP = 2000; % air gun pressure [psi]
+aP = 2000 * 6894.76; % air gun pressure [Pa] (2000 psi)
 aL = 1; % air gun length [m]
-aA = 16; % air gun port area [in^2] % cross-sectional area = port area
+aA = 16 * 6.4516e-4; % air gun port area [m^2] (16 in^2) % cross-sectional area = port area
 aD = 7.5; % air gun depth [m]
 
 nx = [10 100 1000]; % number of grid points per 1 m of air gun length
@@ -74,7 +74,7 @@ for j = 1:length(nx)
     if ismember(nx(j), nx_plot)
         figure(1);
         subplot(2,1,1);
-        plot(t*1000, p(idx,:)*pa2psi);
+        plot(t*1000, p(idx,:)*pa2bar);
     hold on;
     
     end
@@ -99,11 +99,11 @@ end
 figure(1);
 subplot(2,1,1);
 p_analytical = aP * (2/(gamma+1))^((2*gamma)/(gamma-1));
-plot([min(t) max(t)],[p_analytical p_analytical],'k--');
-ylim([0 aP]);
+plot([min(t) max(t)],[p_analytical*pa2bar p_analytical*pa2bar],'k--');
+ylim([0 aP*pa2bar]);
 xlim([0 1]);
 xlabel('Time (ms)');
-ylabel('psi');
+ylabel('bar');
 
 figure(1);
 subplot(2,1,2);

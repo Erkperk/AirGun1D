@@ -45,8 +45,8 @@ aL = [0.2 0.3 0.4 0.5 0.6 0.8 1 1.2 1.4 1.6 1.8 2];
 aL = fliplr(aL);
 
 % air gun properties
-aP = 1020; % pressure [Pa]
-aA = 12.5; % cross-sectional area [in^2]
+aP = 1020 * 6894.76; % pressure [Pa] (1020 psi)
+aA = 12.5 * 6.4516e-4; % cross-sectional area [m^2] (12.5 in^2)
 aD = 7.5; % depth [m]
 
 j = 1;

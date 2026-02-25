@@ -1,13 +1,13 @@
 classdef Timestepper < handle
-    properties (Abstract)
+    properties
         t
         k
         n
     end
 
-    methods (Abstract)
-         [v,t] = getV(obj)
-         obj = step(obj)
+    methods
+        function [v,t] = getV(obj); error('Not implemented'); end
+        function obj = step(obj); error('Not implemented'); end
     end
 
 

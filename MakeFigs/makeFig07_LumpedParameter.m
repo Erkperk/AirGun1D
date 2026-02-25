@@ -39,8 +39,10 @@ T_inf = 288; % ambient water temperature [K]
 
 nx = 100; % number of grid points per 1 m of air gun length
 
-aP = 2000; % air gun pressure [psi]
-aA = 12.5; % air gun port area [in^2] % cross-sectional area = port area
+aP_psi = 2000; % air gun pressure [psi] (for analytical model)
+aA_in2 = 12.5; % air gun port area [in^2] (for analytical model)
+aP = aP_psi * 6894.76; % air gun pressure [Pa]
+aA = aA_in2 * 6.4516e-4; % air gun port area [m^2]
 aD = 7.5; % air gun depth [m]
 m_in = 39.3701; % conversion from m to in
 pa_psi = 0.000145038; % conversion from pa to psi
@@ -53,8 +55,9 @@ for i = 1:length(airgunLengths)
     aL = airgunLengths(i) % display air gun length
     
     %%% Lumped Parameter Model %%%
-    aV = aL*m_in * aA; % air gun volume [in^3]
-    input = [aP, aV, aA]; % inputs for lumped parameter model [pressure, volume, port area]
+    aV_in3 = aL*m_in * aA_in2; % air gun volume [in^3] (for analytical model)
+    aV = aL * aA; % air gun volume [m^3]
+    input = [aP_psi, aV_in3, aA_in2]; % inputs for lumped parameter model [psi, in^3, in^2]
     physConst = physical_constants(aD,r); % save physical constants. Specific depth and distance from source to receiver
     output = AirgunBubbleSolveOutput(input, physConst, false); % solve lumped parameter model
     
