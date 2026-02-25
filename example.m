@@ -87,4 +87,6 @@ set(get(h,'Parent'),'XTick',[0 0.2 0.4 0.6 0.8 1 1.2]);
 hold on;
 title('(c) Source Pressure');
 
-
+% save figure as PNG
+print(figure(1), 'example_output.png', '-dpng', '-r150');
+fprintf('Saved example_output.png\n');
