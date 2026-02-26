@@ -20,4 +20,10 @@ Fig*pdf
 
 # Output files
 *.bin
+*.dat
+*.txt
 *psi*
+
+# C build artifacts
+airgun
+tables.h
