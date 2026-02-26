@@ -75,6 +75,8 @@ static double g_p_inf;     /* ambient pressure at depth */
 /* Output */
 static int    g_n_output  = 2000;   /* number of output samples */
 static double g_r_obs     = 1.0;    /* observation distance [m] */
+static int    g_plot      = 0;      /* generate plot after simulation */
+static const char *g_outfile = "airgun_output.dat";
 
 /* Maximum grid size */
 #define MAX_NX 10000
@@ -849,9 +851,24 @@ static void rk4_step(double t, double dt, int ndof)
 
 /* ========== Output ========== */
 
+static FILE *g_outfp = NULL;
+static FILE *g_chamberfp = NULL;
+
 static void print_header(void)
 {
-    printf("# t  R  Rdot  p_bubble  p_acoustic\n");
+    fprintf(g_outfp, "# t  R  Rdot  p_bubble  p_acoustic\n");
+}
+
+static void print_chamber_header(int m, double L)
+{
+    if (!g_chamberfp) return;
+    /* First line: grid coordinates */
+    fprintf(g_chamberfp, "# x:");
+    double h = L / (m - 1);
+    for (int i = 0; i < m; i++) {
+        fprintf(g_chamberfp, " %.6e", -L + i * h);
+    }
+    fprintf(g_chamberfp, "\n");
 }
 
 static void print_state(double t, const double *state, const double *dstate, int m)
@@ -868,7 +885,16 @@ static void print_state(double t, const double *state, const double *dstate, int
     double Rddot = dbubble[1];
     double p_ac = g_rho_inf * (2.0 * R * Rdot * Rdot + R * R * Rddot) / g_r_obs;
 
-    printf("%.8e  %.8e  %.8e  %.8e  %.8e\n", t, R, Rdot, p_b, p_ac);
+    fprintf(g_outfp, "%.8e  %.8e  %.8e  %.8e  %.8e\n", t, R, Rdot, p_b, p_ac);
+
+    /* Chamber pressure field */
+    if (g_chamberfp) {
+        fprintf(g_chamberfp, "%.8e", t);
+        for (int i = 0; i < m; i++) {
+            fprintf(g_chamberfp, " %.6e", g_p[i]);
+        }
+        fprintf(g_chamberfp, "\n");
+    }
 }
 
 /* ========== CLI parsing ========== */
@@ -892,6 +918,8 @@ static void print_usage(const char *prog)
         "  --rgas <val>      Specific gas constant [J/(kg*K)]  [518.28]\n"
         "  --robs <m>        Observation distance               [1.0]\n"
         "  --nout <int>      Number of output samples           [2000]\n"
+        "  --plot            Generate plot (requires matplotlib)\n"
+        "  --output <file>   Output file                        [airgun_output.dat]\n"
         "\n", prog);
 }
 
@@ -924,6 +952,10 @@ static void parse_args(int argc, char **argv)
             g_r_obs = atof(argv[++i]);
         } else if (strcmp(argv[i], "--nout") == 0 && i + 1 < argc) {
             g_n_output = atoi(argv[++i]);
+        } else if (strcmp(argv[i], "--plot") == 0) {
+            g_plot = 1;
+        } else if (strcmp(argv[i], "--output") == 0 && i + 1 < argc) {
+            g_outfile = argv[++i];
         } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
             print_usage(argv[0]);
             exit(0);
@@ -1053,7 +1085,31 @@ int main(int argc, char **argv)
     fprintf(stderr, "  dt=%.2e, steps=%d, output every %d steps\n",
             dt, n_steps, output_interval);
 
+    /* Open output file (stdout if no --plot) */
+    if (g_plot) {
+        g_outfp = fopen(g_outfile, "w");
+        if (!g_outfp) {
+            fprintf(stderr, "Error: cannot open %s for writing\n", g_outfile);
+            return 1;
+        }
+        /* Chamber pressure file */
+        char chamber_file[512];
+        snprintf(chamber_file, sizeof(chamber_file), "%.*s_chamber.dat",
+                 (int)(strrchr(g_outfile, '.') ?
+                       (strrchr(g_outfile, '.') - g_outfile) :
+                       strlen(g_outfile)),
+                 g_outfile);
+        g_chamberfp = fopen(chamber_file, "w");
+        if (!g_chamberfp) {
+            fprintf(stderr, "Warning: cannot open %s, skipping chamber output\n", chamber_file);
+        }
+        fprintf(stderr, "  Output: %s, %s\n", g_outfile, chamber_file);
+    } else {
+        g_outfp = stdout;
+    }
+
     print_header();
+    print_chamber_header(m, g_length);
 
     /* Print initial state */
     coupled_rhs(g_state, t, g_k1, m);
@@ -1081,6 +1137,16 @@ int main(int argc, char **argv)
     double elapsed = (double)(clock() - t_start) / CLOCKS_PER_SEC;
     fprintf(stderr, "Done. %d steps in %.2f s (%.0f steps/s)\n",
             n_steps, elapsed, n_steps / elapsed);
+
+    if (g_plot) {
+        fclose(g_outfp);
+        if (g_chamberfp) fclose(g_chamberfp);
+        char cmd[512];
+        snprintf(cmd, sizeof(cmd), "python3 plot_airgun.py %s", g_outfile);
+        int ret = system(cmd);
+        if (ret != 0)
+            fprintf(stderr, "Warning: plot command failed (matplotlib installed?)\n");
+    }
 
     /* Cleanup */
     free(g_state);
